@@ -54,10 +54,14 @@ def create_watermark_pdf(
     )
 
     fonts = watermark.getAvailableFonts()
-    if drawing_options.text_font not in fonts :
-        default_font = 'Hei'
-        pdfmetrics.registerFont(TTFont(default_font, font_manager.findfont(default_font)))
-        drawing_options.text_font = default_font
+    if drawing_options.text_font not in fonts:
+        fontPath = font_manager.findfont(drawing_options.text_font, fallback_to_default=False)
+        if not fontPath.endswith('.ttc'):
+            pdfmetrics.registerFont(TTFont(drawing_options.text_font, fontPath))
+        else:
+            fallback_font = 'Hei'
+            pdfmetrics.registerFont(TTFont(fallback_font, font_manager.findfont(fallback_font)))
+            drawing_options.text_font = fallback_font
 
     watermark.setFillColor(drawing_options.text_color, alpha=drawing_options.opacity)
     watermark.setFont(drawing_options.text_font, drawing_options.text_size)
