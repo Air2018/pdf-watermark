@@ -3,10 +3,12 @@ from reportlab.pdfgen import canvas
 from math import cos, sin, pi
 import numpy as np
 from app.objects import DrawingOptions, UserInputs
-import pypdf
+import PyPDF4
 from tempfile import NamedTemporaryFile
 from reportlab.lib.utils import ImageReader
-
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from matplotlib import font_manager
 
 def draw_centered_image(
     canvas: canvas.Canvas,
@@ -50,6 +52,12 @@ def create_watermark_pdf(
             [sin(rotation_angle_rad), cos(rotation_angle_rad)],
         ]
     )
+
+    fonts = watermark.getAvailableFonts()
+    if drawing_options.text_font not in fonts :
+        default_font = 'Hei'
+        pdfmetrics.registerFont(TTFont(default_font, font_manager.findfont(default_font)))
+        drawing_options.text_font = default_font
 
     watermark.setFillColor(drawing_options.text_color, alpha=drawing_options.opacity)
     watermark.setFont(drawing_options.text_font, drawing_options.text_size)
@@ -107,10 +115,10 @@ def create_watermark_pdf(
 
 
 def add_watermark_to_pdf(input: str, output: str, drawing_options: DrawingOptions):
-    pdf_to_transform = pypdf.PdfReader(input)
-    pdf_box = pdf_to_transform.pages[0].mediabox
-    page_width = pdf_box.width
-    page_height = pdf_box.height
+    pdf_to_transform = PyPDF4.PdfFileReader(input)
+    pdf_box = pdf_to_transform.pages[0].mediaBox
+    page_width = float(pdf_box.getWidth())
+    page_height = float(pdf_box.getHeight())
 
     with NamedTemporaryFile() as temporary_file:
         # The watermark is stored in a temporary pdf file
@@ -121,12 +129,12 @@ def add_watermark_to_pdf(input: str, output: str, drawing_options: DrawingOption
             drawing_options,
         )
 
-        watermark_pdf = pypdf.PdfReader(temporary_file.name)
-        pdf_writer = pypdf.PdfWriter()
+        watermark_pdf = PyPDF4.PdfFileReader(temporary_file.name)
+        pdf_writer = PyPDF4.PdfFileWriter()
 
         for page in pdf_to_transform.pages:
-            page.merge_page(watermark_pdf.pages[0])
-            pdf_writer.add_page(page)
+            page.mergePage(watermark_pdf.pages[0])
+            pdf_writer.addPage(page)
 
     with open(output, "wb") as f:
         pdf_writer.write(f)

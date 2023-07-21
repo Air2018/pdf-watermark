@@ -116,7 +116,7 @@ class UserInputs:
         vertical_boxes: int = 6,
         margin: bool = False,
         text_color: str = "#000000",
-        text_font: str = "Helvetica",
+        text_font: str = "SimSong",
         text_size: int = 12,
         image_scale: float = 1,
     ) -> None:
