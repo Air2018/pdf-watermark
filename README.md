@@ -32,7 +32,8 @@ There are also specific options for text and image watermarks. For text watermar
 This package is available on PyPi.
 
 ```
-pip install pdf-watermark
+git clone the repo, then
+python setup.py install
 ```
 
 ### Usage
