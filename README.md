@@ -81,6 +81,7 @@ Options:
     * Add image watermark support.
     * Add CLI.
     * Add complex directories support.
+    * Add Chinese text support
 
 ## License
 
