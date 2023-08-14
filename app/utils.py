@@ -1,3 +1,4 @@
+import subprocess
 from typing import Tuple
 from reportlab.pdfgen import canvas
 from math import cos, sin, pi
@@ -53,15 +54,19 @@ def create_watermark_pdf(
         ]
     )
 
-    fonts = watermark.getAvailableFonts()
-    if drawing_options.text_font not in fonts:
-        fontPath = font_manager.findfont(drawing_options.text_font, fallback_to_default=False)
-        if not fontPath.endswith('.ttc'):
-            pdfmetrics.registerFont(TTFont(drawing_options.text_font, fontPath))
+    if drawing_options.text is not None and is_chinese(str(drawing_options.text)):
+        fonts = watermark.getAvailableFonts()
+        # print("watermark is Chinese. {}".format(drawing_options.text_font))
+        zh_fonts = get_all_zh_font()
+        if zh_fonts is not None and len(zh_fonts) > 0:
+            zh_font = drawing_options.text_font
+            if zh_font not in zh_fonts:
+                zh_font = zh_fonts[0]
+                
+            pdfmetrics.registerFont(TTFont(zh_font, font_manager.findfont(zh_font)))
+            drawing_options.text_font = zh_font
         else:
-            fallback_font = 'Hei'
-            pdfmetrics.registerFont(TTFont(fallback_font, font_manager.findfont(fallback_font)))
-            drawing_options.text_font = fallback_font
+            print("Please install Chinese font.")
 
     watermark.setFillColor(drawing_options.text_color, alpha=drawing_options.opacity)
     watermark.setFont(drawing_options.text_font, drawing_options.text_size)
@@ -117,6 +122,26 @@ def create_watermark_pdf(
 
     watermark.save()
 
+def is_chinese(text: str):
+    """
+    Check whether the entire string contains Chinese
+    """
+    for ch in text:
+        if u'\u4e00' <= ch <= u'\u9fff':
+            return True
+    return False
+
+def get_all_zh_font():
+    fm = font_manager.FontManager()
+    ttf_fonts = set(f.name for f in fm.ttflist)
+    output = subprocess.check_output('fc-list :lang=zh -f "%{family}\n"', shell=True)
+    zh_fonts = set(f.split(',', 1)[0] for f in output.decode().split('\n'))
+    available = list(ttf_fonts & zh_fonts)
+
+    # print('*' * 10, 'available Chinese fonts:', '*' * 10)
+    # for f in available:
+    #     print(f)
+    return available
 
 def add_watermark_to_pdf(input: str, output: str, drawing_options: DrawingOptions):
     pdf_to_transform = PyPDF4.PdfFileReader(input)

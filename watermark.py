@@ -61,7 +61,7 @@ from app.utils import add_watermark_from_inputs
     "--text-font",
     type=str,
     help="Text font to use. Supported fonts are those supported by reportlab.",
-    default="SimSong",
+    default="Helvetica",
 )
 @click.option(
     "-ts",
