@@ -1,3 +1,4 @@
+import platform
 import subprocess
 from typing import Tuple
 from reportlab.pdfgen import canvas
@@ -55,16 +56,25 @@ def create_watermark_pdf(
     )
 
     if drawing_options.text is not None and is_chinese(str(drawing_options.text)):
-        fonts = watermark.getAvailableFonts()
+        # fonts = watermark.getAvailableFonts()
         # print("watermark is Chinese. {}".format(drawing_options.text_font))
-        zh_fonts = get_all_zh_font()
+
+        zh_fonts = list('Microsoft YaHei')
+        if ('Windows' != platform.system()):
+            zh_fonts = get_all_zh_font()
+
+        # print(platform.system())
         if zh_fonts is not None and len(zh_fonts) > 0:
-            zh_font = drawing_options.text_font
-            if zh_font not in zh_fonts:
-                zh_font = zh_fonts[0]
-                
-            pdfmetrics.registerFont(TTFont(zh_font, font_manager.findfont(zh_font)))
-            drawing_options.text_font = zh_font
+            if drawing_options.text_font not in zh_fonts:
+                for f in zh_fonts:
+                    if f.find('Hei') > 0:
+                        drawing_options.text_font = f
+                        break
+                    else:
+                        drawing_options.text_font = zh_fonts[0]
+
+            # print(drawing_options.text_font)
+            pdfmetrics.registerFont(TTFont(drawing_options.text_font, font_manager.findfont(drawing_options.text_font)))
         else:
             print("Please install Chinese font.")
 
